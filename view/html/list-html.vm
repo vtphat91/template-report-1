@@ -1,0 +1,27 @@
+#set( $nameLC = ${entity.name.toLowerCase()} )
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<script type="text/javascript"
+	th:src="@{/static/jquery/multiple-select/js/jquery.multiselect.js}"></script>
+<link rel="stylesheet" type="text/css"
+	th:href="@{/static/jquery/multiple-select/css/jquery.multiselect.css}" />	
+
+<body>
+	<div class="title-head clearfix">
+		<div class="col-sm-9 col-xs-7 no-padding">
+			<h3>
+				<i class="fa fa-table"></i> <span th:text="#{${nameLC}.title}"></span>
+			</h3>
+		</div>
+	</div>
+	<div id="msg"></div>
+	<!-- FORM SEARCH -->
+		<th:block th:include="views/${nameLC}/${nameLC}-search.html :: content"/>
+	<!-- HTML TABLE -->
+	<div class="bg-content clearfix bg-content-tbl" id="tableList">
+		<th:block th:include="views/${nameLC}/${nameLC}-table.html :: content"/>
+	</div>
+</body>
+</html>

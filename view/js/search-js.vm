@@ -1,0 +1,14 @@
+#set( $nameLC = ${entity.name.toLowerCase()} )
+
+${DOLLAR}(function(){
+    // Search
+    ${DOLLAR}('#btnSearch').click(function(event) {
+        doSearch(this,event);
+    });
+});
+
+function doSearch(element, event) {
+    var form = ${DOLLAR}("#formSearch").serialize();
+    ajaxSearch("$nameLC/ajaxList", form, 'tableList',element, event);
+}
+

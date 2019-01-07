@@ -1,0 +1,42 @@
+#set( $dataFields = $entity.getAttributesByCriteria( $const.NOT_KEY, $const.NOT_IN_SELECTED_LINKS ) )
+#set( $constField = "")
+#set( $countField = 0)
+#foreach($field in $dataFields)
+#if($countField == 0)## lap dieu kien
+#if($field.fullType == 'java.lang.String')
+#set ($constField = "'$field.formattedName(0)' as " + $field.formattedName(0))
+#elseif($field.fullType == 'java.util.Date')
+#set ($constField = "GETDATE() as " + $field.formattedName(0))
+#else
+#set ($constField = "1 as " + $field.formattedName(0))
+#end
+#else## esle countField
+#if($field.fullType == 'java.lang.String')
+#set ($constField = $constField + ",'$field.formattedName(0)' as " + $field.formattedName(0))
+#elseif($field.fullType == 'java.util.Date')
+#set ($constField = $constField + ",GETDATE() as " + $field.formattedName(0))
+#else
+#set ($constField = $constField + ",1 as " + $field.formattedName(0))
+#end
+#end## end if countField
+#set( $countField = $countField + 1)
+#end## end for loop
+select $constField
+## replace query here
+where  
+1=1
+
+#foreach($field in $dataFields)
+#if($field.fullType != 'java.util.Date')
+/*IF searchDto.$fn.uncapitalize($field.formattedName(0)) != null && searchDto.$fn.uncapitalize($field.formattedName(0)) != ''*/
+	AND tb_.$field.databaseName LIKE concat('%',  /*searchDto.$fn.uncapitalize($field.formattedName(0))*/, '%')
+/*END*/
+#else
+/*IF searchDto.$fn.uncapitalize($field.formattedName(0)) != null*/
+		AND CONVERT(date, /*searchDto.$fn.uncapitalize($field.formattedName(0))*/) <= CONVERT(date, tb_.$field.databaseName)
+/*END*/
+#end
+#end
+ORDER BY GETDATE()
+OFFSET /*offset*/ ROWS FETCH NEXT  /*sizeOfPage*/ ROWS ONLY
+

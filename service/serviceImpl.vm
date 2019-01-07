@@ -1,0 +1,118 @@
+#parse("/include/packages_variables.vm")
+#parse("/include/init_var_entity.vm")
+#parse("/include/java_header.vm")
+
+#set( $uncapitalizedEntityName = $fn.uncapitalize($entity.name) )
+#set( $serviceName = "${entity.name}Service"	)
+#set( $dtoSearchName = "${entity.name}SearchDto"	)
+#set( $serviceImplName = "${entity.name}ServiceImpl"	)
+#set( $repositoryName = "${entity.name}Repository"	)
+#set( $enumExportName = "${entity.name}ExportEnum"	)
+#set( $uncapitalizedRepoName = $fn.uncapitalize($repositoryName) )
+#set( $reportDto = "${entity.name}ReportDto")
+
+#set( $dataFields = $entity.getAttributesByCriteria( $const.NOT_KEY, $const.NOT_IN_SELECTED_LINKS ) )
+package ${target.javaPackageFromFolder($SRC)};
+
+import vn.com.unit.jcanary.constant.CommonConstant;
+import java.util.Locale;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import vn.com.unit.exception.BusinessException;
+import vn.com.unit.jcanary.authentication.UserProfileUtils;
+import vn.com.unit.jcanary.common.PageWrapper;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import vn.com.unit.jcanary.config.SystemConfig;
+import vn.com.unit.jcanary.utils.ExportExcelUtil;
+import vn.com.unit.jcanary.utils.ImportExcelUtil;
+import vn.com.unit.dto.ItemColsExcelDto;
+import javax.servlet.ServletContext;
+
+//--- import Dto Report
+import ${dtoPackage}.${entity.name}ReportDto;
+//--- Service 
+import ${servicePackage}.${serviceName};
+//-- DTO search
+import ${dtoPackage}.${dtoSearchName};
+//-- Repository
+import ${entityRepository}.${repositoryName};
+//-- Enum Search
+import ${enumPackage}.${enumExportName};
+/**
+ * Spring MVC ServiceImpl for '${entity.name}' management.
+ */
+
+@Service
+@Transactional(readOnly = true, rollbackFor = Exception.class)
+public class ${serviceImplName} implements ${serviceName}{
+
+	@Autowired
+    private ${repositoryName} ${uncapitalizedRepoName};
+    
+    @Autowired
+    private SystemConfig systemConfig;
+
+	@Autowired
+	private ServletContext servletContext;
+
+	/**
+	 * Shows a list with all the occurrences of $reportDto found in the database
+	 * @param model Spring MVC model
+	 * @return
+	 */
+
+	@Override
+    public PageWrapper<$reportDto> doSearch(int page, ${dtoSearchName} searchDto) {
+        int sizeOfPage = systemConfig.getIntConfig(SystemConfig.PAGING_SIZE);
+        PageWrapper<$reportDto> pageWrapper = new PageWrapper<$reportDto>(page, sizeOfPage);
+        if (null == searchDto)
+            searchDto = new ${dtoSearchName}();
+        // set SearchParm
+        setSearchParm(searchDto);
+
+        int count = ${uncapitalizedRepoName}.count${entity.name}ByCondition(searchDto);
+        List<$reportDto> result = new ArrayList<$reportDto>();
+        if (count > 0) {
+            int currentPage = pageWrapper.getCurrentPage();
+            int startIndex = (currentPage - 1) * sizeOfPage;
+            result = ${uncapitalizedRepoName}.findAll${entity.name}sByCondition(startIndex, sizeOfPage, searchDto);
+        }
+        pageWrapper.setDataAndCount(result, count);
+        return pageWrapper;
+    }
+
+	 private void setSearchParm(${dtoSearchName} searchDto) {
+        if (null == searchDto.getFieldValues()) {
+            searchDto.setFieldValues(new ArrayList<String>());
+        }
+	}
+
+
+	@Override
+    public void exportExcel(${dtoSearchName} searchDto, HttpServletResponse res, Locale locale) {
+        try {
+			/*change template*/
+            String templateName = CommonConstant.TEMPLATE_EXCEL_SYSTEM_LOGS;
+            String template = servletContext.getRealPath(CommonConstant.REAL_PATH_TEMPLATE_EXCEL) + "/" + templateName
+                    + CommonConstant.TYPE_EXCEL;
+            String datePattern = systemConfig.getConfig(SystemConfig.DATE_PATTERN);
+            // takedata
+            setSearchParm(searchDto);
+            List<$reportDto> lstData = ${uncapitalizedRepoName}.exportExcelWithCondition(searchDto);
+            List<ItemColsExcelDto> cols = new ArrayList<>();
+            // start fill data to workbook
+            ImportExcelUtil.setListColumnExcel(${enumExportName}.class, cols);
+            ExportExcelUtil<$reportDto> exportExcel = new ExportExcelUtil<>();
+            // do export
+            exportExcel.exportExcelWithXSSFNonPass(template, locale, lstData, ${reportDto}.class, cols, datePattern, res, templateName);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

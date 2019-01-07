@@ -1,0 +1,61 @@
+#set( $dataFields = $entity.getAttributesByCriteria( $const.NOT_KEY, $const.NOT_IN_SELECTED_LINKS) )
+#set( $nameLC = ${entity.name.toLowerCase()} )
+#set( $countField = 1)
+#set( $sizeList = $fn.size($dataFields))
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+xmlns:th="http://www.thymeleaf.org">
+<body th:fragment="content">
+    <form class="form-horizontal u-for-page-top j-formSearch" th:object="${DOLLAR}{searchDto}" method="POST" role="form" id="formSearch">
+	<th:block th:include="views/commons/message-alert.html :: content(${DOLLAR}{messageList}" />
+	<div class="bg-content clearfix">
+			<div data-toggle="collapse" data-target="#search-box" class="header-box"> 
+               <h2 class="title-box" th:text="#{search.title}">Vung tim kiem</h2>
+               <i class="fa fa-minus pull-right" aria-hidden="true"></i> 
+            </div>
+            <div class="collapse in row m-0" id="search-box">
+            	<div class="col-xs-12 col-sm-12 form-group p-0">
+#foreach($field in $dataFields)
+#if($countField % 2 == 0 )
+<div class="row form-group">
+#end
+#if($countField <= $sizeList)            
+#if($field.fullType == 'java.util.Date')
+<label class="col-md-2" th:text="#{${nameLC}.$field.formattedName(0)}">${field.label}</label>
+<div class="col-md-4">
+	<div class="input-group date">
+		<input class="form-control" th:field="*{$field.formattedName(0)}" />
+			<span class="input-group-addon fromDate">
+				<i class="fa fa-calendar"></i>
+			</span>
+	</div>
+</div>
+#else
+ <label class="col-sm-2" th:text="#{${nameLC}.$field.formattedName(0)}">${field.label}</label>
+  <div class="col-md-4">
+		<input type="text" th:field="*{$field.formattedName(0)}" class="form-control" />	
+   </div>
+#end
+#end
+#if($countField % 2 == 0 )
+</div>
+#end
+#set($countField = $countField  + 1)
+#end
+        <!-- Button search -->
+        <div class="row form-group">
+            <div class="col-md-12">
+                <div class="col-md-12 col-xs-12 col-sm-12 footer-box center">
+                    <div class="pull-center unit-button">
+                        <input type="button" id="btnSearch" class="btn btn-search btn btn-primary" th:value="#{search.button}" />
+                    </div>
+                </div>
+            </div>
+        </div>
+       </div>
+      </div>
+	 </div>
+    </form>
+    <script type="text/javascript" th:src="@{/static/js/${nameLC}/${nameLC}-search.js}"></script>
+</body>
+</html>
